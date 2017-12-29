@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+                        </head>
+    <body>
+        <div class="cont">
+            <div class="col-lg-12 col-md-12 col-sm-12" id="graph">
+            </div>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+        <script>
+            function drawIndic(indi,symbol) {
+                var params = renderChartJson(symbol);
+                $.ajax({
+                       beforeSend:function(){
+                       
+                       },
+                       data: {parameters: encodeURIComponent(params)},
+                       url: 'https://www.alphavantage.co/query?function='+indi+'&symbol='+symbol +'&interval=15min&time_period=10&data_type=close&apikey=9L1UZT1MNNMSY7T6',
+                       type: 'GET',
+                       success: function(data){
+                       $("#graph").empty();
+                       drawChart(IndicatorId, data, symbol);
+                       },
+                       error: function(response,txtStatus){
+                       console.log(response,txtStatus)
+                       }
+                       });
+            }
+        
+        function renderChartJson(symbol) {
+            var text = '{"Normalized": false, "NumberOfDays": 1000, "dataPeriod": "Day", "Elements": [{"Symbol": "'+symbol+'", "Type": "price", "Params": ["ohlc"]}]}';
+            $("#graph").text(text);
+            return text;
+        }
+        
+        function drawChart(indi,jsonData,symbol) {
+            //var TechAna="Technical Analysis: "+indi;
+             var datekeys = new Array();
+            var times = new Array();
+            var datas = new Array();
+            var t = "Technical Analysis: "+indi;
+            for(var k in data[t]){
+                datekeys.push(k);
+            }
+
+            for(var i = 0; i < Math.min(133, datekeys.length);i++){
+                var d = "";
+                d = datekeys[i].substring(5,7)+"/"+datekeys[i].substring(8,10);
+                times.push(d);
+            }
+
+
+try {
+
+            if (indi == "STOCH") {
+                var tl = 'Stochastic Oscillator (STOCH)';
+                var a = symbol +' SlowK';
+                var Interval = 10;
+                var datasD=new Array();
+                for (var i=0;i<133;i++){
+                    datas.push(parseFloat(data[t][datekeys[i]]["SlowK"]));
+                    datasD.push(parseFloat(data[t][datekeys[i]]["SlowD"]));
+                }
+
+                var Chart =   {
+                    title: {
+                        text: tl
+                    },
+                    subtitle: {
+                        text: '<a href=\"https://www.alphavantage.co/\" target=\"_blank\">Source: Alpha Vantage</a>'
+                    },
+                    xAxis: {
+                        categories: times,
+                        reversed: true,
+                        tickInterval: 5,
+                    },
+                    yAxis: {
+                        title: {
+                            text: indi
+                        },
+                        tickInterval: Interval,
+                    },
+
+                    plotOptions: {
+                        line:{
+                            marker: {//dot
+                                enabled:false,
+                                radius: 2,
+                                symbol:  'square'
+                            },
+                            lineWidth: 1,
+                          },  
+                    },
+                    series: [{
+                        name: a,
+                        data: datas,
+                        color: 'rgb(233,33,0)',
+
+                    },{
+                    name: symbol + ' SlowD',
+                    data: datasD,
+
+                },
+                    ],
+
+                };
+                Highcharts.chart('stoch_c',Chart)
+                getChartAsPng(Chart);
+
+                //Chart.addSeries();
+
+
+            } 
+            else if(indi == "BBANDS"){
+                var tl = data["Meta Data"]["2: Indicator"];
+                var a = symbol +' Real Middle Band';
+                var Interval = 5;
+                var datasU=new Array();
+                var datasL=new Array();
+                for (var i=0;i<133;i++){
+                    datas.push(parseFloat(data[t][datekeys[i]]["Real Middle Band"]));
+                    datasU.push(parseFloat(data[t][datekeys[i]]["Real Upper Band"]));
+                    datasL.push(parseFloat(data[t][datekeys[i]]["Real Lower Band"]));
+                }
+
+                var Chart =   {
+                    title: {
+                        text: tl
+                    },
+                    subtitle: {
+                        text: '<a href=\"https://www.alphavantage.co/\" target=\"_blank\">Source: Alpha Vantage</a>'
+                    },
+                    xAxis: {
+                        categories: times,
+                        reversed: true,
+                        tickInterval: 5,
+                    },
+                    yAxis: {
+                        title: {
+                            text: indi
+                        },
+                        tickInterval: Interval,
+                    },
+
+                    plotOptions: {
+                        line:{
+                            marker: {//dot
+                                enabled:false,
+                                radius: 2,
+                                symbol:  'square'
+                            },
+                            lineWidth: 1,
+                          },  
+                    },
+                    series: [{
+                        name: a,
+                        data: datas,
+                        color: 'rgb(233,33,0)',
+
+                    },{
+                    name: symbol + ' Real Upper Band',
+                    data: datasU,
+
+                },{
+                    name: symbol + ' Real Lower Band',
+                    data: datasL,
+
+                }
+                ],
+
+                };Highcharts.chart('bbands_c',Chart)
+
+                getChartAsPng(Chart);
+
+                    //Chart.addSeries();
+               // Chart.addSeries();
+
+            }else if (indi == "MACD"){
+                var tl = data["Meta Data"]["2: Indicator"];
+                var a = symbol +' MACD';
+                var Interval = 1;
+                var datasH=new Array();
+                var datasS=new Array();
+                for (var i=0;i<133;i++){
+                    datas.push(parseFloat(data[t][datekeys[i]]["MACD"]));
+                    datasH.push(parseFloat(data[t][datekeys[i]]["MACD_Signal"]));
+                    datasS.push(parseFloat(data[t][datekeys[i]]["MACD_Hist"]));
+                }
+
+                            var Chart =  {
+                    title: {
+                        text: tl
+                    },
+                    subtitle: {
+                        text: '<a href=\"https://www.alphavantage.co/\" target=\"_blank\">Source: Alpha Vantage</a>'
+                    },
+                    xAxis: {
+                        categories: times,
+                        reversed: true,
+                        tickInterval: 5,
+                    },
+                    yAxis: {
+                        title: {
+                            text: indi
+                        },
+                        tickInterval: Interval,
+                    },
+
+                    plotOptions: {
+                        line:{
+                            marker: {//dot
+                                enabled:false,
+                                radius: 2,
+                                symbol:  'square'
+                            },
+                            lineWidth: 1,
+                          },  
+                    },
+                    series: [{
+                        name: a,
+                        data: datas,
+                        color: 'rgb(233,33,0)',
+
+                    },{
+                    name: symbol + ' MACD_Hist',
+                    data: datasH,
+
+                },{
+                    name: symbol + ' MACD_Signal',
+                    data: datasS,
+
+                }],
+
+                };
+                 Highcharts.chart('macd_c',Chart);
+
+                            getChartAsPng(Chart);
+                  //  Chart.addSeries();
+                //Chart.addSeries();
+}else {
+                if(indi == "SMA") var indica = "sma_c";
+                if(indi == "EMA") var indica = "ema_c";
+                if(indi == "RSI") var indica = "rsi_c";
+                if(indi == "ADX") var indica = "adx_c";
+                if(indi == "CCI") var indica = "cci_c";
+                //if(indi == "RSI") var indica = "rsi_c";
+
+                var aa = symbol;
+                console.log(data);
+                var tl = data["Meta Data"]["2: Indicator"];
+                for (var i=0;i<133;i++){
+                    datas.push(parseFloat(data[t][datekeys[i]][indi]));
+                }
+                
+                var Chart =   {
+                    title: {
+                        text: tl
+                    },
+                    subtitle: {
+                        text: '<a href=\"https://www.alphavantage.co/\" target=\"_blank\">Source: Alpha Vantage</a>'
+                    },
+                    xAxis: {
+                        categories: times,
+                        reversed: true,
+                        tickInterval: 5,
+                    },
+                    yAxis: {
+                        title: {
+                            text: indi
+                        },
+                        tickInterval: Interval,
+                    },
+
+                    plotOptions: {
+                        line:{
+                            marker: {//dot
+                                enabled:false,
+                                radius: 2,
+                                symbol:  'square'
+                            },
+                            lineWidth: 1,
+                          },  
+                    },
+                    series: [{
+                        name: aa,
+                        data: datas,
+                        color: 'rgb(233,33,0)',
+
+                    }],
+
+                };
+                  Highcharts.chart(indica,Chart);
+                getChartAsPng(Chart);
+            }
+
+
+                                         
+        }}
+        </script>
+    </body>
+</html>
+
